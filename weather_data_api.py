@@ -17,8 +17,8 @@ def fetch_weather_data_for_months():
     params = {
         "latitude": 40.7143,  # Example: New York
         "longitude": -74.006,
-        "start_date": "2023-01-01",
-        "end_date": "2023-12-31",  # Full year for flexibility
+        "start_date": "2022-01-01",
+        "end_date": "2022-12-31",  # Full year for flexibility
         "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "snowfall_sum"],
         "temperature_unit": "fahrenheit",
         "precipitation_unit": "inch",

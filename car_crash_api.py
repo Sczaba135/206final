@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, text
 from sodapy import Socrata
 import re
 
+
 # Replace these placeholders with your actual credentials
 app_token = "411bmgc3xjidmqazoprlv2052"
 stan_app_token = "LZo8cDKk5efEwxM8ZhiHQGICB"
@@ -46,8 +47,8 @@ def transform_date(date_str):
     return date_match.group(1) if date_match else date_str
 
 # Fetch unique dates from the weather table
-with weather_engine.connect() as conn:
-    weather_dates_query = text("SELECT DISTINCT date FROM weather")
+with engine.connect() as conn:
+    weather_dates_query = text("SELECT DISTINCT date FROM weather_summary")
     weather_dates = conn.execute(weather_dates_query).fetchall()
     weather_dates = [row[0] for row in weather_dates]
 
@@ -82,4 +83,6 @@ for date in weather_dates:
 
             # Write the DataFrame to the car_crash table
             results_df.to_sql('car_crash', con=engine, if_exists='append', index=False)
+            conn.close()
+
             break
