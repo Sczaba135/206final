@@ -1,8 +1,8 @@
 import pandas as pd
 import os
-from sqlalchemy import create_engine, text
+import sqlite3
+from sqlalchemy import text
 from sodapy import Socrata
-import re
 
 
 # Replace these placeholders with your actual credentials
@@ -12,77 +12,133 @@ stan_api_key_id = "bxj7pkxp01zw8b4akgfxwvm84"
 stan_api_key_secret = "4pkw8vup63igtmsypsq7cbd8c8kqkoiz5mfek90ptopt46nx7g"
 secret_token = "3slx59h2gbk1ysoboklzqx81wkuo7wsylpb0wuyxihr1cf22fk"
 
+
 # Authenticated client for accessing the API
 client = Socrata("data.cityofnewyork.us", stan_app_token, username="sczaba@umich.edu", password="$kynT*Gy4CVgaF5")
 
-# SQLite connection strings
-weather_db_filename = "project_data.db"
-weather_db_path = os.path.join(os.getcwd(), weather_db_filename)
-weather_db_url = f"sqlite:///{weather_db_path}"
-weather_engine = create_engine(weather_db_url)
 
-car_crash_db_filename = "car_crash_data.db"
-car_crash_db_path = os.path.join(os.getcwd(), car_crash_db_filename)
-car_crash_db_url = f"sqlite:///{car_crash_db_path}"
-car_crash_engine = create_engine(car_crash_db_url)
-
+# SQLite database
 database_filename = "project_data.db"
 database_path = os.path.join(os.getcwd(), database_filename)
-database_url = f"sqlite:///{database_path}"
-engine = create_engine(database_url)
-
-with engine.connect() as conn:
-    conn.execute(text("""
-    CREATE TABLE IF NOT EXISTS car_crash (
-        crash_date TEXT,
-        number_of_persons_injured INTEGER,
-        number_of_persons_killed INTEGER,
-        collision_id TEXT PRIMARY KEY
-    )
-    """))
-
-# Function to transform date format
-def transform_date(date_str):
-    date_match = re.match(r"(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}\.\d{3}", date_str)
-    return date_match.group(1) if date_match else date_str
-
-# Fetch unique dates from the weather table
-with engine.connect() as conn:
-    weather_dates_query = text("SELECT DISTINCT date FROM weather_summary")
-    weather_dates = conn.execute(weather_dates_query).fetchall()
-    weather_dates = [row[0] for row in weather_dates]
 
 
+# Function to create necessary tables
+def setup_database():
+   conn = sqlite3.connect(database_path)
+   cur = conn.cursor()
 
-# Process each date
-for date in weather_dates:
-    with engine.connect() as conn:
-        # Check the number of entries already in the car_crash table for the date
-        count_query = text("SELECT COUNT(*) FROM car_crash WHERE crash_date = :date")
-        count_result = conn.execute(count_query, {"date": date}).scalar()
 
-        # Skip dates that already have 20 or more entries
-        if count_result >= 20:
-            continue
+   # Create the car_crash table
+   cur.execute('''
+       CREATE TABLE IF NOT EXISTS car_crash (
+           date_id INTEGER,
+           number_of_persons_injured INTEGER,
+           number_of_persons_killed INTEGER,
+           collision_id TEXT PRIMARY KEY
+       )
+   ''')
 
-        # Fetch the remaining number of entries needed
-        limit = 20 - count_result
 
-        # Fetch crash data from the API for the current date
-        results = client.get("h9gi-nx95", 
-                             select="crash_date,number_of_persons_injured,number_of_persons_killed,collision_id",
-                             where=f"crash_date >= '{date}T00:00:00.000' AND crash_date < '{date}T23:59:59.999'",
-                             limit=limit)
+   # Create the day_mapping table
+   cur.execute('''
+       CREATE TABLE IF NOT EXISTS day_mapping (
+           date_id INTEGER PRIMARY KEY,
+           date TEXT UNIQUE
+       )
+   ''')
 
-        # Convert results to a DataFrame
-        results_df = pd.DataFrame.from_records(results)
 
-        if not results_df.empty:
-            # Apply the date transformation to the crash_date column
-            results_df['crash_date'] = results_df['crash_date'].apply(transform_date)
+   conn.commit()
+   conn.close()
 
-            # Write the DataFrame to the car_crash table
-            results_df.to_sql('car_crash', con=engine, if_exists='append', index=False)
-            conn.close()
 
-            break
+# Function to fetch the next available `date_id`
+def get_next_date_id():
+   conn = sqlite3.connect(database_path)
+   cur = conn.cursor()
+   cur.execute("SELECT MAX(date_id) FROM day_mapping")
+   result = cur.fetchone()[0]
+   conn.close()
+   return (result or 0) + 1
+
+
+# Function to fetch crash data and insert into the database
+def fetch_and_insert_car_crash_data():
+   conn = sqlite3.connect(database_path)
+   cur = conn.cursor()
+
+
+   # Fetch unique dates from the weather_summary table
+   cur.execute("SELECT DISTINCT date FROM weather_summary ORDER BY date")
+   weather_dates = [row[0] for row in cur.fetchall()]
+
+
+   rows_added = 0  # Track the number of rows added this run
+
+
+   for date in weather_dates:
+       next_date_id = get_next_date_id()
+
+
+       # Check if the date is already in day_mapping
+       cur.execute("SELECT COUNT(*) FROM day_mapping WHERE date = ?", (date,))
+       if cur.fetchone()[0] > 0:
+           continue  # Skip already processed dates
+
+
+       # Insert date into day_mapping table
+       cur.execute("INSERT INTO day_mapping (date_id, date) VALUES (?, ?)", (next_date_id, date))
+       conn.commit()
+
+
+       # Fetch crash data for this date
+       results = client.get(
+           "h9gi-nx95",
+           select="crash_date,number_of_persons_injured,number_of_persons_killed,collision_id",
+           where=f"crash_date >= '{date}T00:00:00.000' AND crash_date < '{date}T23:59:59.999'",
+           limit=20
+       )
+
+
+       results_df = pd.DataFrame.from_records(results)
+
+
+       if not results_df.empty:
+           results_df['date_id'] = next_date_id
+           results_df = results_df.rename(columns={'crash_date': 'date'})
+
+
+           # Write data to car_crash table row by row
+           for _, row in results_df.iterrows():
+               try:
+                   cur.execute('''
+                       INSERT INTO car_crash (date_id, number_of_persons_injured, number_of_persons_killed, collision_id)
+                       VALUES (?, ?, ?, ?)
+                   ''', (row['date_id'], row['number_of_persons_injured'], row['number_of_persons_killed'], row['collision_id']))
+                   rows_added += 1
+               except sqlite3.IntegrityError:
+                   print(f"Skipping duplicate collision_id: {row['collision_id']}")
+
+
+               if rows_added >= 20:
+                   break  # Stop after 20 rows have been added
+
+
+       if rows_added >= 20:
+           break  # Stop after 20 rows have been added
+
+
+   conn.commit()
+   conn.close()
+
+
+   if rows_added == 0:
+       print("No new rows added. Check if all available data has already been processed.")
+   else:
+       print(f"{rows_added} rows added to the database.")
+
+
+# Main execution
+if __name__ == "__main__":
+   setup_database()
+   fetch_and_insert_car_crash_data()
