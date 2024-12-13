@@ -1,0 +1,128 @@
+Average Crashes on Snowfall Days (New York City):
+==================================================
+Date: 2022-01-03
+Total Injuries: 5
+Total Fatalities: 0
+Average Crashes: 0.25
+Snowfall: 0.5236220955848694 inches
+--------------------------------------------------
+Date: 2022-01-06
+Total Injuries: 3
+Total Fatalities: 0
+Average Crashes: 0.15
+Snowfall: 0.027559055015444756 inches
+--------------------------------------------------
+Date: 2022-01-07
+Total Injuries: 8
+Total Fatalities: 0
+Average Crashes: 0.40
+Snowfall: 2.4527556896209717 inches
+--------------------------------------------------
+Date: 2022-01-16
+Total Injuries: 10
+Total Fatalities: 0
+Average Crashes: 0.50
+Snowfall: 0.7440944910049438 inches
+--------------------------------------------------
+Date: 2022-01-17
+Total Injuries: 5
+Total Fatalities: 0
+Average Crashes: 0.25
+Snowfall: 0.05511811003088951 inches
+--------------------------------------------------
+Date: 2022-01-20
+Total Injuries: 7
+Total Fatalities: 0
+Average Crashes: 0.35
+Snowfall: 0.6889763474464417 inches
+--------------------------------------------------
+Date: 2022-01-23
+Total Injuries: 5
+Total Fatalities: 0
+Average Crashes: 0.25
+Snowfall: 0.08267716318368912 inches
+--------------------------------------------------
+Date: 2022-01-24
+Total Injuries: 4
+Total Fatalities: 1
+Average Crashes: 0.25
+Snowfall: 0.05511811003088951 inches
+--------------------------------------------------
+Date: 2022-01-28
+Total Injuries: 8
+Total Fatalities: 0
+Average Crashes: 0.40
+Snowfall: 0.8818897008895874 inches
+--------------------------------------------------
+Date: 2022-01-29
+Total Injuries: 6
+Total Fatalities: 0
+Average Crashes: 0.30
+Snowfall: 4.960630893707275 inches
+--------------------------------------------------
+Date: 2022-02-04
+Total Injuries: 7
+Total Fatalities: 0
+Average Crashes: 0.35
+Snowfall: 0.05511811003088951 inches
+--------------------------------------------------
+Date: 2022-02-05
+Total Injuries: 10
+Total Fatalities: 0
+Average Crashes: 0.50
+Snowfall: 0.08267716318368912 inches
+--------------------------------------------------
+Date: 2022-02-07
+Total Injuries: 7
+Total Fatalities: 0
+Average Crashes: 0.35
+Snowfall: 0.19291338324546814 inches
+--------------------------------------------------
+Date: 2022-02-13
+Total Injuries: 17
+Total Fatalities: 0
+Average Crashes: 0.85
+Snowfall: 1.5708658695220947 inches
+--------------------------------------------------
+Date: 2022-02-19
+Total Injuries: 8
+Total Fatalities: 0
+Average Crashes: 0.40
+Snowfall: 0.11023622006177902 inches
+--------------------------------------------------
+Date: 2022-02-25
+Total Injuries: 7
+Total Fatalities: 0
+Average Crashes: 0.35
+Snowfall: 0.7716534733772278 inches
+--------------------------------------------------
+Date: 2022-03-09
+Total Injuries: 13
+Total Fatalities: 0
+Average Crashes: 0.65
+Snowfall: 2.0669291019439697 inches
+--------------------------------------------------
+Date: 2022-03-12
+Total Injuries: 3
+Total Fatalities: 0
+Average Crashes: 0.15
+Snowfall: 1.984251856803894 inches
+--------------------------------------------------
+Date: 2022-03-13
+Total Injuries: 8
+Total Fatalities: 0
+Average Crashes: 0.40
+Snowfall: 0.05511811003088951 inches
+--------------------------------------------------
+Date: 2022-03-26
+Total Injuries: 12
+Total Fatalities: 0
+Average Crashes: 0.60
+Snowfall: 0.22047245502471924 inches
+--------------------------------------------------
+Date: 2022-03-28
+Total Injuries: 9
+Total Fatalities: 0
+Average Crashes: 0.45
+Snowfall: 0.027559055015444756 inches
+--------------------------------------------------
