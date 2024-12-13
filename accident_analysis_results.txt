@@ -1,4 +1,4 @@
-Daily Averages and Snow/Precipitation Indicators (Updated):
+Daily Averages and Snow/Precipitation Indicators:
       date  avg_injuries  avg_deaths  snow_over_0_1  precipitation_over_0_1  total_precipitation  total_snowfall
 2022-01-01          0.25        0.00              0                       1             1.043307        0.000000
 2022-01-02          0.30        0.00              0                       1             0.346457        0.000000
@@ -122,9 +122,13 @@ Daily Averages and Snow/Precipitation Indicators (Updated):
 2022-04-30          0.70        0.00              0                       0             0.000000        0.000000
 2022-05-01          0.45        0.00              0                       0             0.043307        0.000000
 
-Average Injuries and Deaths Per Accident by Condition (Updated):
+Average Injuries and Deaths Per Accident by Condition:
 day_condition  avg_injuries_per_accident  avg_deaths_per_accident
          Both                   0.445455                 0.000000
       Neither                   0.425625                 0.001875
 Precipitation                   0.455357                 0.005357
          Snow                   0.325000                 0.000000
+
+Total Accidents, Injuries, and Deaths:
+ total_accidents  total_injuries  total_deaths
+            2420            1047             6

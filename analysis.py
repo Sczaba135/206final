@@ -1,59 +1,75 @@
 import sqlite3
 import pandas as pd
 
-# Reconnect to the newly uploaded database file
+# Connect to the database
 db_path = 'project_data.db'
 conn = sqlite3.connect(db_path)
 
-# Updated Queries: Use weather_id from weather_summary to correlate car_crash and snowfall_data
-# Step 1: Calculate daily average injuries and deaths, and whether snow or precipitation > 0.1
-query_daily_updated = """
+# Step 1: Calculate daily average injuries, deaths, and snow/precipitation indicators
+query_daily = """
 SELECT 
-    car_crash.crash_date AS date,
-    AVG(car_crash.number_of_persons_injured) AS avg_injuries,
-    AVG(car_crash.number_of_persons_killed) AS avg_deaths,
-    MAX(CASE WHEN snowfall_data.snowfall_sum > 0.1 THEN 1 ELSE 0 END) AS snow_over_0_1,
-    MAX(CASE WHEN weather_summary.precipitation_sum > 0.1 THEN 1 ELSE 0 END) AS precipitation_over_0_1,
-    SUM(weather_summary.precipitation_sum) AS total_precipitation,
-    SUM(snowfall_data.snowfall_sum) AS total_snowfall
-FROM car_crash
-LEFT JOIN weather_summary ON car_crash.crash_date = weather_summary.date
-LEFT JOIN snowfall_data ON weather_summary.weather_id = snowfall_data.weather_id
-GROUP BY car_crash.crash_date;
+    dm.date AS date,
+    AVG(cc.number_of_persons_injured) AS avg_injuries,
+    AVG(cc.number_of_persons_killed) AS avg_deaths,
+    MAX(CASE WHEN sd.snowfall_sum > 0.1 THEN 1 ELSE 0 END) AS snow_over_0_1,
+    MAX(CASE WHEN ws.precipitation_sum > 0.1 THEN 1 ELSE 0 END) AS precipitation_over_0_1,
+    ws.precipitation_sum AS total_precipitation,
+    sd.snowfall_sum AS total_snowfall
+FROM car_crash cc
+LEFT JOIN day_mapping dm ON cc.date_id = dm.date_id
+LEFT JOIN weather_summary ws ON dm.date = ws.date
+LEFT JOIN snowfall_data sd ON ws.weather_id = sd.weather_id
+GROUP BY dm.date;
 """
 
-# Step 2: Calculate average injuries and deaths per accident for snowy days, precipitation days, and days where neither occurred
-query_conditions_updated = """
+# Step 2: Calculate injuries and deaths per accident for different conditions
+query_conditions = """
 SELECT 
     CASE 
-        WHEN snowfall_data.snowfall_sum > 0.1 AND weather_summary.precipitation_sum > 0.1 THEN 'Both'
-        WHEN snowfall_data.snowfall_sum > 0.1 THEN 'Snow'
-        WHEN weather_summary.precipitation_sum > 0.1 THEN 'Precipitation'
+        WHEN sd.snowfall_sum > 0.1 AND ws.precipitation_sum > 0.1 THEN 'Both'
+        WHEN sd.snowfall_sum > 0.1 THEN 'Snow'
+        WHEN ws.precipitation_sum > 0.1 THEN 'Precipitation'
         ELSE 'Neither'
     END AS day_condition,
-    AVG(car_crash.number_of_persons_injured) AS avg_injuries_per_accident,
-    AVG(car_crash.number_of_persons_killed) AS avg_deaths_per_accident
-FROM car_crash
-LEFT JOIN weather_summary ON car_crash.crash_date = weather_summary.date
-LEFT JOIN snowfall_data ON weather_summary.weather_id = snowfall_data.weather_id
+    AVG(cc.number_of_persons_injured) AS avg_injuries_per_accident,
+    AVG(cc.number_of_persons_killed) AS avg_deaths_per_accident
+FROM car_crash cc
+LEFT JOIN day_mapping dm ON cc.date_id = dm.date_id
+LEFT JOIN weather_summary ws ON dm.date = ws.date
+LEFT JOIN snowfall_data sd ON ws.weather_id = sd.weather_id
 GROUP BY day_condition;
 """
 
-# Execute the updated queries and fetch the results
-daily_results_updated = pd.read_sql_query(query_daily_updated, conn)
-conditions_results_updated = pd.read_sql_query(query_conditions_updated, conn)
+# Step 3: Additional optional categories
+query_totals = """
+SELECT 
+    COUNT(*) AS total_accidents,
+    SUM(cc.number_of_persons_injured) AS total_injuries,
+    SUM(cc.number_of_persons_killed) AS total_deaths
+FROM car_crash cc;
+"""
 
-# Write the updated results to a new file
-updated_script_output_path = 'accident_analysis_results.txt'
-with open(updated_script_output_path, 'w') as f:
-    f.write("Daily Averages and Snow/Precipitation Indicators (Updated):\n")
-    f.write(daily_results_updated.to_string(index=False))
+# Execute queries
+daily_results = pd.read_sql_query(query_daily, conn)
+conditions_results = pd.read_sql_query(query_conditions, conn)
+totals_results = pd.read_sql_query(query_totals, conn)
+
+# Write the results to a text file
+output_file = 'accident_analysis_results.txt'
+with open(output_file, 'w') as f:
+    # Daily Averages
+    f.write("Daily Averages and Snow/Precipitation Indicators:\n")
+    f.write(daily_results.to_string(index=False))
     f.write("\n\n")
-    f.write("Average Injuries and Deaths Per Accident by Condition (Updated):\n")
-    f.write(conditions_results_updated.to_string(index=False))
+
+    # Injuries/Deaths Per Condition
+    f.write("Average Injuries and Deaths Per Accident by Condition:\n")
+    f.write(conditions_results.to_string(index=False))
+    f.write("\n\n")
+
+    # Totals
+    f.write("Total Accidents, Injuries, and Deaths:\n")
+    f.write(totals_results.to_string(index=False))
 
 # Close the database connection
 conn.close()
-
-# Provide the updated script file path
-updated_script_output_path
