@@ -13,7 +13,9 @@ SELECT
     AVG(car_crash.number_of_persons_injured) AS avg_injuries,
     AVG(car_crash.number_of_persons_killed) AS avg_deaths,
     MAX(CASE WHEN snowfall_data.snowfall_sum > 0.1 THEN 1 ELSE 0 END) AS snow_over_0_1,
-    MAX(CASE WHEN weather_summary.precipitation_sum > 0.1 THEN 1 ELSE 0 END) AS precipitation_over_0_1
+    MAX(CASE WHEN weather_summary.precipitation_sum > 0.1 THEN 1 ELSE 0 END) AS precipitation_over_0_1,
+    SUM(weather_summary.precipitation_sum) AS total_precipitation,
+    SUM(snowfall_data.snowfall_sum) AS total_snowfall
 FROM car_crash
 LEFT JOIN weather_summary ON car_crash.crash_date = weather_summary.date
 LEFT JOIN snowfall_data ON weather_summary.weather_id = snowfall_data.weather_id
